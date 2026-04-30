@@ -1,0 +1,434 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment — Smart Typing Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="{% static 'images/logo.png' %}">
+<style>
+[data-theme="light"]{--bg:#f4f6ff;--surf:#ffffff;--surf2:#eef0fb;--brd:#d0d4f0;--brd2:#b8bce0;--txt:#0f1235;--dim:#4a4e8a;--muted:#8890c0;--shad:rgba(0,0,60,.1);--dot:rgba(0,0,80,.03);}
+[data-theme="dark"]{--bg:#05050e;--surf:#0b0b1c;--surf2:#101028;--brd:#1a1a38;--brd2:#252550;--txt:#e2e2f5;--dim:#8080b0;--muted:#40405a;--shad:rgba(0,0,0,.65);--dot:rgba(255,255,255,.028);}
+:root{--a:#00c9a7;--a2:#6d28d9;--ag:rgba(0,201,167,.13);--err:#dc2626;}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:background .3s,color .3s;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(circle,var(--dot) 1px,transparent 1px);background-size:28px 28px;}
+@keyframes fade-up{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:560px;}
+
+/* ══ CARD ══ */
+.card{background:var(--surf);border-radius:24px;box-shadow:0 20px 60px var(--shad);overflow:hidden;margin-bottom:16px;animation:fade-up .4s ease both;}
+.card-top{background:linear-gradient(135deg,#00c9a7,#6d28d9);padding:24px 30px;text-align:center;position:relative;overflow:hidden;}
+.card-top::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:18px 18px;}
+.card-top h1{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;position:relative;}
+.card-top p{font-size:12px;color:rgba(255,255,255,.82);position:relative;}
+.card-body{padding:26px 28px;color:var(--txt);}
+
+/* Messages */
+.msg{padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:14px;}
+.msg.error{background:#fdecea;color:#c0392b;border:1px solid #f5c6c3;}
+.msg.success{background:#edfaf1;color:#1e8449;border:1px solid #b7e4c7;}
+
+/* ══ STEP LABEL ══ */
+.step-lbl{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.step-lbl::after{content:'';flex:1;height:1px;background:var(--brd2);}
+
+/* ══ PLAN CARDS ══ */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:22px;}
+
+.plan-label{display:block;border:2px solid var(--brd2);border-radius:14px;padding:18px 12px;cursor:pointer;text-align:center;transition:all .28s cubic-bezier(.25,.8,.25,1);position:relative;background:var(--surf);user-select:none;}
+.plan-label:hover{border-color:var(--a);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,201,167,.15);}
+.plan-label input[type=radio]{position:absolute;opacity:0;width:0;height:0;}
+.plan-label.sel{border-color:var(--a);background:var(--ag);box-shadow:0 0 0 1px var(--a);}
+.plan-label.sel .plan-price{color:var(--a);}
+.plan-label.sel .plan-tag{background:rgba(0,201,167,.15);color:var(--a);border-color:rgba(0,201,167,.3);}
+
+.popular-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;border-radius:999px;padding:2px 12px;font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;white-space:nowrap;}
+
+.plan-tag{display:inline-block;background:var(--surf2);border:1px solid var(--brd2);border-radius:999px;padding:2px 10px;font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:8px;transition:all .25s;}
+.plan-price{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--txt);line-height:1;transition:color .25s;}
+.plan-rupee{font-size:15px;vertical-align:super;margin-right:1px;}
+.plan-dur{font-size:10px;color:var(--muted);margin-top:5px;font-family:'Rajdhani',sans-serif;}
+
+/* Generate Button */
+.gen-btn{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;color:#fff;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:all .3s;box-shadow:0 6px 28px rgba(0,201,167,.25);}
+.gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,201,167,.4);}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none !important;}
+
+/* ══ PLAN SUMMARY ══ */
+.plan-summary{background:rgba(0,201,167,.07);border:1.5px solid rgba(0,201,167,.25);border-radius:13px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.ps-l .ps-lbl{font-size:9px;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.ps-l .ps-val{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--txt);}
+.ps-r .ps-lbl{font-size:9px;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;text-align:right;}
+.ps-r .ps-amount{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--a);}
+
+/* ══ TIMER ══ */
+.timer-wrap{text-align:center;margin-bottom:18px;}
+.timer-box{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:12px 30px;border-radius:14px;border:2px solid;transition:all .4s;}
+.timer-box.ok    {background:#f0fdf4;border-color:#86efac;}
+.timer-box.warn  {background:#fffbeb;border-color:#fcd34d;}
+.timer-box.danger{background:#fff5f5;border-color:#fca5a5;animation:danger-pulse .8s ease-in-out infinite alternate;}
+[data-theme="dark"] .timer-box.ok{background:rgba(21,128,61,.12);}
+[data-theme="dark"] .timer-box.warn{background:rgba(180,83,9,.12);}
+[data-theme="dark"] .timer-box.danger{background:rgba(220,38,38,.12);}
+@keyframes danger-pulse{from{border-color:#fca5a5;box-shadow:none;}to{border-color:#dc2626;box-shadow:0 0 16px rgba(220,38,38,.3);}}
+
+.timer-num{font-family:'Orbitron',sans-serif;font-size:42px;font-weight:900;line-height:1;}
+.timer-box.ok     .timer-num{color:#16a34a;}
+.timer-box.warn   .timer-num{color:#d97706;}
+.timer-box.danger .timer-num{color:#dc2626;}
+.timer-sub{font-size:9px;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;}
+.timer-hint{font-size:11.5px;color:var(--dim);margin-top:7px;font-family:'Rajdhani',sans-serif;font-weight:600;}
+
+/* ══ EXPIRED BOX ══ */
+.expired-box{display:none;background:rgba(220,38,38,.06);border:2px dashed rgba(220,38,38,.3);border-radius:14px;padding:24px;text-align:center;margin-bottom:18px;}
+.expired-box .exp-ico{font-size:44px;margin-bottom:10px;}
+.expired-box p{font-size:13px;color:var(--err);font-weight:600;margin-bottom:14px;line-height:1.6;}
+.regen-btn{display:inline-block;background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;border:none;border-radius:11px;padding:11px 26px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .22s;}
+.regen-btn:hover{opacity:.88;transform:translateY(-2px);}
+
+/* ══ QR SECTION ══ */
+.qr-section{text-align:center;margin-bottom:16px;}
+.qr-lbl{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.qr-frame{display:inline-block;background:#fff;border:2px solid var(--brd2);border-radius:18px;padding:14px;box-shadow:0 4px 20px var(--shad);}
+.qr-frame img{width:190px;height:190px;border-radius:8px;display:block;}
+
+/* ══ AMOUNT NOTE ══ */
+.amount-note{background:linear-gradient(135deg,rgba(0,201,167,.09),rgba(109,40,217,.07));border:1.5px solid rgba(0,201,167,.28);border-radius:12px;padding:14px 18px;margin-bottom:16px;text-align:center;}
+.an-warn{font-size:10px;color:#b45309;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
+.an-amt{font-family:'Orbitron',sans-serif;font-size:34px;font-weight:900;color:var(--a);line-height:1;}
+.an-hint{font-size:11px;color:#6d28d9;margin-top:5px;font-weight:600;}
+[data-theme="dark"] .an-hint{color:#a78bfa;}
+
+/* ══ UPI ROW ══ */
+.upi-row{background:var(--surf2);border:1.5px dashed var(--brd2);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.upi-lbl-sm{font-size:9px;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.upi-id-txt{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
+.copy-btn{background:var(--a);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.copy-btn:hover{background:#00a88a;}
+
+/* ══ STEPS ══ */
+.steps{margin-bottom:16px;}
+.step-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;font-size:12px;color:var(--dim);line-height:1.5;}
+.snum{width:20px;height:20px;min-width:20px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+
+/* ══ UTR FORM ══ */
+.utr-lbl{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:6px;font-family:'Rajdhani',sans-serif;letter-spacing:.3px;}
+.utr-inp{width:100%;border:1.5px solid var(--brd2);border-radius:10px;padding:11px 16px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--txt);background:var(--surf);outline:none;transition:border-color .2s;margin-bottom:14px;}
+.utr-inp:focus{border-color:var(--a);}
+.utr-inp::placeholder{color:var(--muted);}
+
+.confirm-btn{width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;color:#fff;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.4px;transition:all .3s;box-shadow:0 6px 28px rgba(0,201,167,.25);}
+.confirm-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,201,167,.38);}
+.confirm-hint{text-align:center;margin-top:9px;font-size:10.5px;color:var(--muted);line-height:1.6;}
+
+/* ══ BACK LINK ══ */
+.back-row{text-align:center;margin-top:4px;font-size:13px;color:var(--muted);}
+.back-row a{color:#6d28d9;font-weight:600;text-decoration:none;}
+.back-row a:hover{text-decoration:underline;}
+
+/* ══ THEME BTN (top right) ══ */
+.theme-fab{position:fixed;top:16px;right:16px;z-index:200;display:flex;align-items:center;gap:7px;background:var(--surf);border:1.5px solid var(--brd2);border-radius:999px;padding:6px 13px 6px 9px;cursor:pointer;font-size:12px;font-weight:700;color:var(--dim);transition:all .25s;font-family:'Rajdhani',sans-serif;box-shadow:0 2px 12px var(--shad);}
+.theme-fab:hover{border-color:var(--a);color:var(--a);}
+.pill-sm{width:28px;height:14px;border-radius:999px;background:var(--brd2);position:relative;transition:background .3s;flex-shrink:0;}
+.pill-sm.on{background:var(--a);}
+.pill-sm::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.pill-sm.on::after{transform:translateX(14px);}
+
+@media(max-width:480px){
+  .card-body{padding:20px 16px;}
+  .plans{grid-template-columns:1fr 1fr;}
+  .plan-price{font-size:24px;}
+  .timer-num{font-size:34px;}
+  .qr-frame img{width:165px;height:165px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Theme FAB -->
+<div class="theme-fab" onclick="toggleTheme()">
+  <span id="thico">🌙</span><span id="thlbl">Dark</span>
+  <div class="pill-sm" id="tpill"></div>
+</div>
+
+<div class="wrap">
+<div class="card">
+
+  <!-- TOP BANNER -->
+  <div class="card-top">
+    <h1>⭐ Premium Upgrade</h1>
+    <p>Plan chunein → QR scan karein → Saare passages unlock!</p>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+      <div class="msg {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+
+    {# ════════════════════════════ #}
+    {# STEP 1 — PLAN SELECT        #}
+    {# ════════════════════════════ #}
+    {% if step == 'select' %}
+
+    <div class="step-lbl">📋 Step 1 — Apna Plan Chunein</div>
+
+    <form method="POST" action="{% url 'payment' %}" id="planForm">
+      {% csrf_token %}
+
+      <div class="plans">
+
+        <!-- 1 WEEK ₹9 -->
+        <label class="plan-label" id="card-week" onclick="selPlan(this,'week')">
+          <input type="radio" name="plan" value="week" id="r-week">
+          <div class="plan-tag">1 WEEK</div>
+          <div class="plan-price"><span class="plan-rupee">₹</span>9</div>
+          <div class="plan-dur">7 din ka access</div>
+        </label>
+
+        <!-- 1 MONTH ₹19 -->
+        <label class="plan-label" id="card-month" onclick="selPlan(this,'month')">
+          <input type="radio" name="plan" value="month" id="r-month">
+          <div class="plan-tag">1 MONTH</div>
+          <div class="plan-price"><span class="plan-rupee">₹</span>19</div>
+          <div class="plan-dur">30 din ka access</div>
+        </label>
+
+        <!-- 3 MONTHS ₹49 — POPULAR -->
+        <label class="plan-label" id="card-3month" onclick="selPlan(this,'3month')">
+          <span class="popular-badge">⭐ POPULAR</span>
+          <input type="radio" name="plan" value="3month" id="r-3month">
+          <div class="plan-tag">3 MONTHS</div>
+          <div class="plan-price"><span class="plan-rupee">₹</span>49</div>
+          <div class="plan-dur">90 din ka access</div>
+        </label>
+
+        <!-- 6 MONTHS ₹99 -->
+        <label class="plan-label" id="card-6month" onclick="selPlan(this,'6month')">
+          <input type="radio" name="plan" value="6month" id="r-6month">
+          <div class="plan-tag">6 MONTHS</div>
+          <div class="plan-price"><span class="plan-rupee">₹</span>99</div>
+          <div class="plan-dur">180 din ka access</div>
+        </label>
+
+      </div>
+
+      <button type="submit" class="gen-btn" id="genBtn" disabled>
+        📱 QR Code Generate Karo →
+      </button>
+    </form>
+
+
+    {# ════════════════════════════ #}
+    {# STEP 2 — QR + TIMER         #}
+    {# ════════════════════════════ #}
+    {% elif step == 'qr' %}
+
+    <div class="step-lbl">📱 Step 2 — Scan Karo & Pay Karo</div>
+
+    <!-- Plan Summary -->
+    <div class="plan-summary">
+      <div class="ps-l">
+        <div class="ps-lbl">Selected Plan</div>
+        <div class="ps-val">{{ plan_info.label }} — {{ plan_info.desc }}</div>
+      </div>
+      <div class="ps-r">
+        <div class="ps-lbl">Exact Amount Bhejo</div>
+        <div class="ps-amount">₹{{ unique_amount }}</div>
+      </div>
+    </div>
+
+    <!-- COUNTDOWN TIMER -->
+    <div class="timer-wrap" id="timerWrap">
+      <div class="timer-box ok" id="timerBox">
+        <div class="timer-num" id="timerNum">60</div>
+        <div class="timer-sub">seconds remaining</div>
+      </div>
+      <div class="timer-hint" id="timerHint">⚡ QR 60 seconds mein expire hoga — jaldi scan karein!</div>
+    </div>
+
+    <!-- EXPIRED BOX -->
+    <div class="expired-box" id="expiredBox">
+      <div class="exp-ico">⏰</div>
+      <p>QR Code expire ho gaya!<br>Naya QR generate karein.</p>
+      <a href="{% url 'payment' %}" class="regen-btn">🔄 Naya QR Generate Karo</a>
+    </div>
+
+    <!-- QR + PAYMENT DETAILS -->
+    <div id="qrSection">
+
+      <!-- QR IMAGE -->
+      <div class="qr-section">
+        <div class="qr-lbl">📷 QR Scan Karein</div>
+        <div class="qr-frame">
+          <img src="data:image/png;base64,{{ qr_b64 }}" alt="UPI Payment QR Code">
+        </div>
+      </div>
+
+      <!-- EXACT AMOUNT -->
+      <div class="amount-note">
+        <div class="an-warn">⚠️ EXACTLY YEH AMOUNT BHEJO — NA ZYADA NA KAM</div>
+        <div class="an-amt">₹{{ unique_amount }}</div>
+        <div class="an-hint">Scan karne par yeh amount auto-fill ho jaayega ✅</div>
+      </div>
+
+      <!-- UPI ID -->
+      <div class="upi-row">
+        <div>
+          <div class="upi-lbl-sm">UPI ID</div>
+          <div class="upi-id-txt" id="upiTxt">{{ upi_id }}</div>
+        </div>
+        <button type="button" class="copy-btn" onclick="copyUPI()">📋 Copy</button>
+      </div>
+
+      <!-- HOW TO PAY STEPS -->
+      <div class="steps">
+        <div class="step-row"><div class="snum">1</div><span>GPay / PhonePe / Paytm kholo</span></div>
+        <div class="step-row"><div class="snum">2</div><span>QR scan karo — amount <b>₹{{ unique_amount }}</b> auto-fill ho jaayega</span></div>
+        <div class="step-row"><div class="snum">3</div><span>Pay karo — payment screenshot le lo</span></div>
+        <div class="step-row"><div class="snum">4</div><span>Neeche UTR number daalo aur submit karo</span></div>
+      </div>
+
+      <!-- UTR SUBMIT FORM -->
+      <form method="POST" action="{% url 'payment_confirm' %}">
+        {% csrf_token %}
+        <input type="hidden" name="pay_req_id" value="{{ pay_req.id }}">
+
+        <label class="utr-lbl">📄 Transaction ID / UTR Number (Recommended)</label>
+        <input
+          type="text"
+          name="transaction_ref"
+          class="utr-inp"
+          placeholder="12-digit UTR number (e.g. 424567891234)"
+          maxlength="100"
+        >
+
+        <button type="submit" class="confirm-btn" id="confirmBtn">
+          ✅ &nbsp;MAINE PAY KAR DIYA — SUBMIT KARO
+        </button>
+      </form>
+
+      <div class="confirm-hint">
+        ⚠️ Sirf payment karne ke baad submit karo.<br>
+        Admin ₹{{ unique_amount }} bank statement mein verify karega.<br>
+        24 ghante mein account activate ho jayega. Request ID: <b>#{{ pay_req.id }}</b>
+      </div>
+
+    </div><!-- /qrSection -->
+
+    {% endif %}
+
+  </div><!-- /card-body -->
+</div><!-- /card -->
+
+<!-- BACK LINK -->
+<div class="back-row">
+  {% if step == 'qr' %}
+    <a href="{% url 'payment' %}">← Alag plan chunein</a>
+  {% else %}
+    <a href="{% url 'dashboard' %}">← Dashboard par wapas jao</a>
+  {% endif %}
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ══ THEME ══ */
+let isDark = localStorage.getItem('theme') === 'dark';
+if(isDark){
+  document.documentElement.setAttribute('data-theme','dark');
+  document.getElementById('thico').textContent = '☀️';
+  document.getElementById('thlbl').textContent = 'Light';
+  document.getElementById('tpill').classList.add('on');
+}
+function toggleTheme(){
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('thico').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('thlbl').textContent  = isDark ? 'Light' : 'Dark';
+  document.getElementById('tpill').classList.toggle('on', isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+/* ══ STEP 1 — Plan Selection ══ */
+function selPlan(el, key){
+  document.querySelectorAll('.plan-label').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('r-' + key).checked = true;
+  document.getElementById('genBtn').disabled   = false;
+}
+
+/* ══ STEP 2 — 60 Second Countdown Timer ══ */
+{% if step == 'qr' %}
+let sLeft = {{ seconds_left }};
+
+function tick(){
+  const numEl   = document.getElementById('timerNum');
+  const boxEl   = document.getElementById('timerBox');
+  const hintEl  = document.getElementById('timerHint');
+
+  numEl.textContent = sLeft;
+
+  // Color update
+  boxEl.className = 'timer-box';
+  if(sLeft > 30){
+    boxEl.classList.add('ok');
+    hintEl.textContent = '⚡ QR 60 seconds mein expire hoga — jaldi scan karein!';
+  } else if(sLeft > 10){
+    boxEl.classList.add('warn');
+    hintEl.textContent = '⚠️ Jaldi karo — sirf ' + sLeft + ' seconds baaki!';
+  } else if(sLeft > 0){
+    boxEl.classList.add('danger');
+    hintEl.textContent = '🔴 Sirf ' + sLeft + ' seconds baaki — ABHI SCAN KARO!';
+  }
+
+  if(sLeft <= 0){
+    // QR expire — section hide, expired box show
+    document.getElementById('qrSection').style.display    = 'none';
+    document.getElementById('timerWrap').style.display    = 'none';
+    document.getElementById('expiredBox').style.display   = 'block';
+    const cb = document.getElementById('confirmBtn');
+    if(cb) cb.disabled = true;
+    return;
+  }
+
+  sLeft--;
+  setTimeout(tick, 1000);
+}
+
+// Timer shuru karo
+tick();
+{% endif %}
+
+/* ══ Copy UPI ID ══ */
+function copyUPI(){
+  const upi = document.getElementById('upiTxt').textContent.trim();
+  navigator.clipboard.writeText(upi).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const old = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = old, 2000);
+  }).catch(() => {
+    // Fallback
+    const tmp = document.createElement('textarea');
+    tmp.value = upi;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy', 2000);
+  });
+}
+</script>
+</body>
+</html>

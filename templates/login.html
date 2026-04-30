@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Typing Master</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #efe3db;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: #fdf8f5;
+            border-radius: 28px;
+            box-shadow: 0 24px 64px rgba(100, 55, 25, 0.12);
+            width: 100%;
+            max-width: 600px;
+            padding: 56px 52px 48px;
+        }
+
+        /* ── HEADING ── */
+        .card h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            color: #1e1208;
+            line-height: 1.18;
+            margin-bottom: 10px;
+        }
+
+        .card .subtitle {
+            font-size: .9rem;
+            color: #7a6558;
+            font-weight: 400;
+            margin-bottom: 36px;
+        }
+
+        /* ── MESSAGES (Django) ── */
+        .messages { margin-bottom: 20px; }
+        .msg {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .msg.error   { background: #fdecea; color: #c0392b; border: 1px solid #f5c6c3; }
+        .msg.success { background: #edfaf1; color: #1e8449; border: 1px solid #b7e4c7; }
+
+        /* ── FLOATING LABEL FIELD ── */
+        .field {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #fdf8f5;
+            padding: 0 6px;
+            font-size: .74rem;
+            font-weight: 600;
+            color: #2b1e14;
+            letter-spacing: .3px;
+            z-index: 1;
+        }
+
+        .field .input-wrap {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid #ddd0c8;
+            border-radius: 50px;
+            padding: 0 20px;
+            height: 56px;
+            gap: 12px;
+            transition: border-color .2s;
+            background: transparent;
+        }
+
+        .field .input-wrap:focus-within {
+            border-color: #e8a880;
+        }
+
+        .field .input-wrap svg {
+            flex-shrink: 0;
+            color: #b8a49a;
+        }
+
+        .field input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .92rem;
+            color: #2b1e14;
+            width: 100%;
+        }
+
+        .field input::placeholder { color: #c0ada5; }
+
+        /* eye toggle */
+        .eye-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #c0ada5;
+            display: flex;
+            align-items: center;
+            transition: color .2s;
+        }
+        .eye-btn:hover { color: #7a6558; }
+
+        /* ── FORGOT ── */
+        .forgot {
+            text-align: right;
+            margin-top: -6px;
+            margin-bottom: 30px;
+        }
+        .forgot a {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #5a4a40;
+            text-decoration: none;
+        }
+        .forgot a:hover { color: #c0622a; }
+
+        /* ── PRIMARY BUTTON ── */
+        .btn-primary {
+            display: block;
+            width: 100%;
+            height: 56px;
+            border: none;
+            border-radius: 50px;
+            background: #f2c4a8;
+            color: #b85520;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.02rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: .4px;
+            transition: background .2s, transform .1s;
+            margin-bottom: 28px;
+        }
+        .btn-primary:hover  { background: #e8a882; }
+        .btn-primary:active { transform: scale(.98); }
+
+        /* ── DIVIDER ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #b8a49a;
+            font-size: .8rem;
+            margin-bottom: 24px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e4d4cb;
+        }
+
+        /* ── GOOGLE BUTTON ── */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            height: 52px;
+            border-radius: 50px;
+            border: 1.5px solid #ddd0c8;
+            background: #ffffff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .92rem;
+            font-weight: 600;
+            color: #3c3028;
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color .2s, box-shadow .2s, transform .15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            margin-bottom: 28px;
+        }
+        .google-btn:hover {
+            border-color: #e8a882;
+            box-shadow: 0 4px 16px rgba(0,0,0,.09);
+            transform: translateY(-1px);
+        }
+        .google-btn svg { width: 22px; height: 22px; }
+
+        /* ── SWITCH ── */
+        .switch-text {
+            text-align: center;
+            font-size: .84rem;
+            color: #7a6558;
+        }
+        .switch-text a {
+            font-weight: 700;
+            color: #c0622a;
+            text-decoration: none;
+        }
+        .switch-text a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .card { padding: 40px 28px 36px; }
+            .card h1 { font-size: 1.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h1>Welcome to<br>Smart Typing Test</h1>
+    <p class="subtitle">Boost your WPM and accuracy with daily practice</p>
+
+    <!-- ── Django Messages ── -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="msg {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Login Form ── -->
+    <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <!-- Email -->
+        <div class="field">
+            <label for="id_email">Email</label>
+            <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-10 7L2 7"/>
+                </svg>
+                <input type="email" id="id_email" name="email" placeholder="email@gmail.com" required>
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+            <label for="id_password">Password</label>
+            <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input type="password" id="id_password" name="password" placeholder="Enter password to access typing dashboard" required>
+                <button type="button" class="eye-btn" onclick="togglePwd()" aria-label="Show/hide password">
+                    <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="forgot">
+            <a href="/forgot-password/">Forgot Password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary">Login</button>
+
+    </form>
+
+    <!-- ── Divider ── -->
+    <div class="divider">Daily typing tests available</div>
+
+    <!-- ── Google Login ── -->
+    <a href="/accounts/google/login/" class="google-btn">
+        <!-- Google SVG Logo -->
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M45.12 24.5c0-1.57-.14-3.08-.4-4.54H24v8.59h11.85c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.55-9.47 6.55-16.21z"/>
+            <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+            <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34A21.91 21.91 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/>
+            <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+        </svg>
+        Continue with Google
+    </a>
+
+    <!-- ── Switch to Register ── -->
+    <p class="switch-text">
+        Don't have an account? <a href="/register/">Sign Up</a>
+    </p>
+
+</div>
+
+<script>
+    function togglePwd() {
+        const input = document.getElementById('id_password');
+        const icon  = document.getElementById('eyeIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.innerHTML = `
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>`;
+        } else {
+            input.type = 'password';
+            icon.innerHTML = `
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>`;
+        }
+    }
+</script>
+
+</body>
+</html>
