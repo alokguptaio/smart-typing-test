@@ -1,13 +1,14 @@
 from pathlib import Path
 import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-ws(b+6^ych089s%v#oj#u(l(00u8!co=w4@n2k4f**%b&(d1_l'
+# 🔐 SECURITY
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG') == 'True'
 
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # ---------------- INSTALLED APPS ----------------
 INSTALLED_APPS = [
@@ -18,16 +19,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Sites framework
     'django.contrib.sites',
 
-    # allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
 
-    # your app
     'app',
 ]
 
@@ -72,22 +70,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Typing.wsgi.application'
 
-# ---------------- DATABASE ----------------
+# ---------------- DATABASE (Render PostgreSQL) ----------------
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'typingdb',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
 
 # ---------------- LOGIN SETTINGS ----------------
 LOGIN_REDIRECT_URL = '/index/'
 LOGOUT_REDIRECT_URL = '/'
-
 ACCOUNT_LOGIN_REDIRECT_URL = '/index/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
@@ -105,21 +97,21 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# ---------------- STATIC ----------------
-STATIC_URL = 'static/'
+# ---------------- STATIC FILES ----------------
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
-
+# ---------------- DEFAULT FIELD ----------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ---------------- EMAIL CONFIG ----------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'alokgupta482005@gmail.com'   # तुम्हारा gmail
-EMAIL_HOST_PASSWORD = 'chur hjcl lsvj egsg'     # app password
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
