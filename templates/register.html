@@ -1,127 +1,186 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
-            background-size: cover;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Smart Typing Test</title>
+  <link rel="icon" href="{% static 'images/logo.png' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5); 
-            z-index: 0;
-        }
+    :root {
+      --a:           #00c9a7;
+      --a2:          #6d28d9;
+      --auth-bg:     #efe3db;
+      --auth-surf:   #fdf8f5;
+      --auth-brd:    #ddd0c8;
+      --auth-focus:  #e8a880;
+      --auth-txt:    #1e1208;
+      --auth-dim:    #7a6558;
+      --auth-muted:  #c0ada5;
+      --auth-label:  #2b1e14;
+      --auth-btn:    #f2c4a8;
+      --auth-btnclr: #b85520;
+      --auth-btnhov: #e8a882;
+      --auth-link:   #c0622a;
+      --auth-icon:   #b8a49a;
+      --auth-shad:   rgba(100,55,25,.12);
+      --err-bg:      #fdecea;
+      --err-clr:     #c0392b;
+      --err-brd:     #f5c6c3;
+      --ok-bg:       #edfaf1;
+      --ok-clr:      #1e8449;
+      --ok-brd:      #b7e4c7;
+    }
 
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 420px;
-            padding: 40px;
-            background: rgba(255,255,255,0.95);
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            animation: fadeIn 1s ease-in-out;
-        }
+    body { font-family: 'DM Sans', sans-serif; background: var(--auth-bg); color: var(--auth-txt); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 
-        h2 {
-            margin-bottom: 20px;
-            color: #2575fc;
-            font-size: 28px;
-        }
+    .card { background: var(--auth-surf); border-radius: 28px; box-shadow: 0 24px 64px var(--auth-shad); width: 100%; max-width: 520px; padding: 52px 48px 44px; animation: fadeIn .6s ease both; }
 
-        input {
-            width: 90%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            transition: 0.3s;
-        }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; text-decoration: none; }
+    .brand-name { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: var(--a); display: block; letter-spacing: .5px; }
+    .brand-sub  { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--auth-dim); letter-spacing: 1.2px; text-transform: uppercase; display: block; }
 
-        input:focus {
-            border-color: #2575fc;
-            box-shadow: 0 0 8px rgba(37,117,252,0.5);
-            outline: none;
-        }
+    h1 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--auth-txt); margin-bottom: 8px; line-height: 1.2; }
+    .subtitle { font-size: .88rem; color: var(--auth-dim); margin-bottom: 30px; line-height: 1.6; }
 
-        button {
-            width: 95%;
-            padding: 12px;
-            background: linear-gradient(135deg, #2575fc, #6a11cb);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+    .messages { margin-bottom: 16px; }
+    .msg { padding: 10px 16px; border-radius: 10px; font-size: .84rem; font-weight: 500; margin-bottom: 8px; }
+    .msg.error   { background: var(--err-bg); color: var(--err-clr); border: 1px solid var(--err-brd); }
+    .msg.success { background: var(--ok-bg);  color: var(--ok-clr);  border: 1px solid var(--ok-brd); }
 
-        button:hover {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            transform: scale(1.05);
-        }
+    .field { position: relative; margin-bottom: 20px; }
+    .field label { position: absolute; top: -10px; left: 20px; background: var(--auth-surf); padding: 0 6px; font-size: .74rem; font-weight: 600; color: var(--auth-label); letter-spacing: .3px; z-index: 1; }
+    .input-wrap { display: flex; align-items: center; border: 1.5px solid var(--auth-brd); border-radius: 50px; padding: 0 20px; height: 56px; gap: 12px; transition: border-color .2s; }
+    .input-wrap:focus-within { border-color: var(--auth-focus); }
+    .input-wrap svg { flex-shrink: 0; color: var(--auth-icon); }
+    .input-wrap input { border: none; outline: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: .92rem; color: var(--auth-txt); width: 100%; }
+    .input-wrap input::placeholder { color: var(--auth-muted); }
 
-        .error {
-            color: red;
-            font-size: 14px;
-        }
+    .eye-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--auth-muted); display: flex; align-items: center; transition: color .2s; }
+    .eye-btn:hover { color: var(--auth-dim); }
 
-        .success {
-            color: green;
-            font-size: 14px;
-        }
+    /* Password strength */
+    .pw-strength-wrap { margin-top: -12px; margin-bottom: 18px; padding: 0 4px; }
+    .pw-bar { height: 4px; border-radius: 4px; background: #e4d4cb; overflow: hidden; margin-bottom: 4px; }
+    .pw-fill { height: 100%; border-radius: 4px; transition: width .3s, background .3s; width: 0%; }
+    .pw-label { font-size: .72rem; color: var(--auth-dim); font-weight: 600; letter-spacing: .3px; }
 
-        a {
-            text-decoration: none;
-            color: #2575fc;
-            font-weight: bold;
-        }
+    .btn-primary { display: block; width: 100%; height: 56px; border: none; border-radius: 50px; background: var(--auth-btn); color: var(--auth-btnclr); font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: .4px; transition: background .2s, transform .1s; margin-bottom: 24px; }
+    .btn-primary:hover  { background: var(--auth-btnhov); }
+    .btn-primary:active { transform: scale(.98); }
 
-        a:hover {
-            text-decoration: underline;
-        }
+    .switch-text { text-align: center; font-size: .84rem; color: var(--auth-dim); }
+    .switch-text a { font-weight: 700; color: var(--auth-link); text-decoration: none; }
+    .switch-text a:hover { text-decoration: underline; }
 
-        @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(-20px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-    </style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 480px) { .card { padding: 36px 22px 30px; border-radius: 20px; } h1 { font-size: 1.7rem; } }
+  </style>
 </head>
 <body>
-    <div class="overlay"></div>
-    <div class="container">
-        <h2>Register</h2>
+<div class="card">
 
-        {% for message in messages %}
-            <p class="{% if message.tags == 'error' %}error{% else %}success{% endif %}">
-                {{ message }}
-            </p>
-        {% endfor %}
-
-        <form method="POST" action="/register/">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Enter Name" required><br>
-            <input type="email" name="email" placeholder="Enter Email" required><br>
-            <input type="password" name="password" placeholder="Enter Password" required><br>
-            <br>
-            <button type="submit">Register</button>
-        </form>
-
-        <p>Already have an account? <a href="/login/">Login</a></p>
+  <a href="/" class="brand">
+    <div>
+      <span class="brand-name">SMART TYPING TEST</span>
+      <span class="brand-sub">Raebareli — Typing Platform</span>
     </div>
+  </a>
+
+  <h1>Create account</h1>
+  <p class="subtitle">Join thousands improving their typing speed every day</p>
+
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div class="msg {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/register/">
+    {% csrf_token %}
+
+    <!-- Username -->
+    <div class="field">
+      <label for="id_username">Full Name</label>
+      <div class="input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" id="id_username" name="username" placeholder="Your full name" required>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="field">
+      <label for="id_email">Email</label>
+      <div class="input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+        <input type="email" id="id_email" name="email" placeholder="email@gmail.com" required>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="field">
+      <label for="id_password">Password</label>
+      <div class="input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" id="id_password" name="password" placeholder="Create a strong password" required oninput="checkStrength(this.value)">
+        <button type="button" class="eye-btn" onclick="togglePwd('id_password','eyeIcon')" aria-label="Show/hide password">
+          <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Strength bar -->
+    <div class="pw-strength-wrap">
+      <div class="pw-bar"><div class="pw-fill" id="strengthFill"></div></div>
+      <span class="pw-label" id="strengthLabel"></span>
+    </div>
+
+    <button type="submit" class="btn-primary">Create Account</button>
+  </form>
+
+  <p class="switch-text">Already have an account? <a href="/login/">Login</a></p>
+</div>
+
+<script>
+function togglePwd(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  }
+}
+
+function checkStrength(pw) {
+  const fill = document.getElementById('strengthFill');
+  const label = document.getElementById('strengthLabel');
+  let score = 0;
+  if (pw.length >= 6)  score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { w:'0%',   c:'#e4d4cb', t:'' },
+    { w:'25%',  c:'#dc2626', t:'Weak' },
+    { w:'50%',  c:'#b45309', t:'Fair' },
+    { w:'75%',  c:'#d97706', t:'Good' },
+    { w:'100%', c:'#15803d', t:'Strong' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width      = pw.length ? l.w : '0%';
+  fill.style.background = l.c;
+  label.textContent     = pw.length ? l.t : '';
+  label.style.color     = l.c;
+}
+</script>
 </body>
 </html>

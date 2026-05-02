@@ -186,38 +186,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
       <div class="plans">
 
-        <!-- 1 WEEK ₹9 -->
-        <label class="plan-label" id="card-week" onclick="selPlan(this,'week')">
-          <input type="radio" name="plan" value="week" id="r-week">
-          <div class="plan-tag">1 WEEK</div>
-          <div class="plan-price"><span class="plan-rupee">₹</span>9</div>
-          <div class="plan-dur">7 din ka access</div>
-        </label>
-
-        <!-- 1 MONTH ₹19 -->
-        <label class="plan-label" id="card-month" onclick="selPlan(this,'month')">
-          <input type="radio" name="plan" value="month" id="r-month">
-          <div class="plan-tag">1 MONTH</div>
-          <div class="plan-price"><span class="plan-rupee">₹</span>19</div>
-          <div class="plan-dur">30 din ka access</div>
-        </label>
-
-        <!-- 3 MONTHS ₹49 — POPULAR -->
-        <label class="plan-label" id="card-3month" onclick="selPlan(this,'3month')">
-          <span class="popular-badge">⭐ POPULAR</span>
-          <input type="radio" name="plan" value="3month" id="r-3month">
-          <div class="plan-tag">3 MONTHS</div>
-          <div class="plan-price"><span class="plan-rupee">₹</span>49</div>
-          <div class="plan-dur">90 din ka access</div>
-        </label>
-
-        <!-- 6 MONTHS ₹99 -->
-        <label class="plan-label" id="card-6month" onclick="selPlan(this,'6month')">
-          <input type="radio" name="plan" value="6month" id="r-6month">
-          <div class="plan-tag">6 MONTHS</div>
-          <div class="plan-price"><span class="plan-rupee">₹</span>99</div>
-          <div class="plan-dur">180 din ka access</div>
-        </label>
+        {% for plan_key, plan_info in plans.items %}
+          <label class="plan-label" id="card-{{ plan_key }}" onclick="selPlan(this,'{{ plan_key }}')">
+            {% if plan_info.is_popular %}
+              <span class="popular-badge">⭐ POPULAR</span>
+            {% endif %}
+            <input type="radio" name="plan" value="{{ plan_key }}" id="r-{{ plan_key }}">
+            <div class="plan-tag">{{ plan_info.label|upper }}</div>
+            <div class="plan-price">
+              <span class="plan-rupee">₹</span>{{ plan_info.price }}
+            </div>
+            <div class="plan-dur">{{ plan_info.desc }}</div>
+          </label>
+{% endfor %}
 
       </div>
 

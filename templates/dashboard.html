@@ -341,11 +341,10 @@
     <div class="upgrade-banner-left">
       <p><b>🔒 Free Plan:</b> Abhi sirf free passages available hain.<br>Premium lo aur <b>saare passages unlock</b> karo!</p>
       <div class="upgrade-banner-plans">
-        <div class="mini-plan">1 Week <span>₹9</span></div>
-        <div class="mini-plan">1 Month <span>₹19</span></div>
-        <div class="mini-plan">3 Months <span>₹49</span></div>
-        <div class="mini-plan">6 Months <span>₹99</span></div>
-      </div>
+  {% for plan in active_plans %}
+  <div class="mini-plan">{{ plan.plan_name }} <span>₹{{ plan.price }}</span></div>
+  {% endfor %}
+</div>
     </div>
     <a href="{% url 'payment' %}" class="upgrade-btn">⭐ UPGRADE KAREIN</a>
   </div>

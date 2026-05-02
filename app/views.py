@@ -5,37 +5,33 @@ import io
 import base64
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import logout as auth_logout
-from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.utils import timezone
-from .models import EmailVerification, PasswordReset, UserProfile, PaymentRequest, Passage
+from .models import (
+    EmailVerification,
+    PasswordReset,
+    UserProfile,
+    PaymentRequest,
+    Passage,
+    SubscriptionPlan,   # ← Naya
+    SiteSettings,       # ← Naya
+)
+from django.conf import settings
 
 
+# ═══════════════════════════════════════════════════
+#  GOOGLE LOGIN REDIRECT
+# ═══════════════════════════════════════════════════
 def google_redirect(request):
     if request.user.is_authenticated:
-        request.session['user_id'] = request.user.id  # 🔥 sync
+        request.session['user_id'] = request.user.id
     return redirect('/index/')
-# ═══════════════════════════════════════════════════
-#  APNI INFO YAHAN DAALO
-# ═══════════════════════════════════════════════════
-YOUR_UPI_ID   = "alokgupta482005@paytm"   # ← Apna UPI ID
-YOUR_UPI_NAME = "Smart Typing Test"        # ← Apna naam
-YOUR_DOMAIN   = "http://127.0.0.1:8000"   # ← Production mein domain
-
-PLANS = {
-    'week':   {'label': '1 Week',   'days': 7,   'price': 9,  'desc': '7 din ka access'},
-    'month':  {'label': '1 Month',  'days': 30,  'price': 19, 'desc': '30 din ka access'},
-    '3month': {'label': '3 Months', 'days': 90,  'price': 49, 'desc': '90 din ka access'},
-    '6month': {'label': '6 Months', 'days': 180, 'price': 99, 'desc': '180 din ka access'},
-}
 
 
 # ═══════════════════════════════════════════════════
-#  HELPERS
+#  HELPER — Session se current user laao
 # ═══════════════════════════════════════════════════
-
 def get_logged_user(request):
     """Session se current user laata hai."""
     user_id = request.session.get('user_id')
@@ -47,6 +43,32 @@ def get_logged_user(request):
         return None
 
 
+# ═══════════════════════════════════════════════════
+#  HELPER — Plans DB se laao (HARDCODING HATAO)
+#  Pehle PLANS = {...} hardcoded tha views.py mein
+#  Ab DB se aata hai — Admin se directly control
+# ═══════════════════════════════════════════════════
+def get_plans_dict():
+    """
+    SubscriptionPlan table se active plans laata hai.
+    Views mein sirf yeh function call karo — kabhi hardcode mat karo.
+    """
+    plans = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order')
+    return {
+        p.plan_key: {
+            'label':       p.plan_name,
+            'days':        p.duration_days,
+            'price':       p.price,
+            'desc':        p.description,
+            'is_popular':  p.is_popular,
+        }
+        for p in plans
+    }
+
+
+# ═══════════════════════════════════════════════════
+#  HELPER — UPI QR Code banao
+# ═══════════════════════════════════════════════════
 def make_qr_base64(upi_id, name, amount, note):
     """
     UPI QR Code banata hai.
@@ -83,7 +105,6 @@ def register(request):
         email    = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
 
-        # 🔴 Validation
         if not username or not email or not password:
             messages.error(request, "All fields are required!")
             return redirect('register')
@@ -100,7 +121,7 @@ def register(request):
             messages.error(request, "This username is already taken!")
             return redirect('register')
 
-        # ✅ User create
+        # User create
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -108,26 +129,22 @@ def register(request):
             is_active=True
         )
 
-        # ✅ Profile create
+        # Profile create
         UserProfile.objects.create(user=user, is_paid=False)
 
-        # ✅ Token generate
+        # Token generate
         token = str(uuid.uuid4())
-        EmailVerification.objects.create(
-            user=user,
-            token=token,
-            is_verified=False
-        )
+        EmailVerification.objects.create(user=user, token=token, is_verified=False)
 
-        # ✅ Verification link
-        verify_link = f"{YOUR_DOMAIN}/verify-email/{token}/"
+        # Domain DB se lo
+        site_settings = SiteSettings.get_settings()
+        verify_link = f"{site_settings.site_domain}/verify-email/{token}/"
 
         print("\n" + "="*60)
         print(f"EMAIL VERIFICATION LINK for {email}:")
         print(verify_link)
         print("="*60 + "\n")
 
-        # ✅ Send Email (Welcome + Verify)
         try:
             send_mail(
                 subject="🎉 Welcome to Smart Typing Test!",
@@ -137,18 +154,17 @@ def register(request):
                     "👉 Please verify your email by clicking the link below:\n"
                     f"{verify_link}\n\n"
                     "🚀 After verification, you can log in here:\n"
-                    f"{YOUR_DOMAIN}/login/\n\n"
+                    f"{site_settings.site_domain}/login/\n\n"
                     "Best of luck 💯\n"
                     "Team Smart Typing Test"
                 ),
-                from_email="alokgupta482005@gmail.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
             )
         except Exception as e:
             print(f"Email send error: {e}")
             messages.warning(request, "Account created, but email could not be sent!")
 
-        # ✅ Success message
         messages.success(request, "🎉 Account created successfully! Please verify your email.")
         return redirect('login')
 
@@ -167,7 +183,7 @@ def verify_email(request, token):
         return redirect('login')
 
     if ev.is_verified:
-        messages.success(request, "✅ Email already verified hai!")
+        messages.success(request, "✅ Email already verified !")
         return redirect('login')
 
     ev.is_verified = True
@@ -223,11 +239,9 @@ def logout_view(request):
 #  INDEX — Landing Page (Typing Test)
 #  URL      : /index/
 #  Template : index.html
-#  Yeh page mein poora typing test hota hai
-#  (setup, test, result, history sab ek page mein)
 # ═══════════════════════════════════════════════════
 def index(request):
-    # 🔥 Google login support
+    # Google login support
     if request.user.is_authenticated:
         user = request.user
         request.session['user_id'] = user.id
@@ -240,9 +254,9 @@ def index(request):
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
     return render(request, 'index.html', {
-        'user': user,
-        'profile': profile,
-        'is_paid': profile.is_active(),
+        'user':     user,
+        'profile':  profile,
+        'is_paid':  profile.is_active(),
     })
 
 
@@ -255,6 +269,7 @@ def index(request):
 #    2. Plan expiry check
 #    3. Free passages → sab ko
 #    4. Locked passages → sirf paid ko
+#    5. active_plans context → DB se (banner ke liye)
 # ═══════════════════════════════════════════════════
 def dashboard(request):
     user = get_logged_user(request)
@@ -268,13 +283,14 @@ def dashboard(request):
     all_passages  = Passage.objects.filter(language=selected_lang).order_by('order')
 
     if is_active:
-        # Paid user — sab passages
         visible_passages = all_passages
         locked_passages  = Passage.objects.none()
     else:
-        # Free user — sirf is_free=True wale
         visible_passages = all_passages.filter(is_free=True)
         locked_passages  = all_passages.filter(is_free=False)
+
+    # ✅ Plans DB se lo — dashboard upgrade banner ke liye
+    active_plans = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order')
 
     return render(request, 'dashboard.html', {
         'user':             user,
@@ -284,6 +300,7 @@ def dashboard(request):
         'visible_passages': visible_passages,
         'locked_passages':  locked_passages,
         'selected_lang':    selected_lang,
+        'active_plans':     active_plans,   # ✅ Naya — template mein use hoga
     })
 
 
@@ -310,6 +327,12 @@ def payment(request):
         )
         return redirect('dashboard')
 
+    # ✅ DB se plans lo (hardcoded PLANS dict nahi)
+    PLANS = get_plans_dict()
+
+    # ✅ DB se site settings lo (UPI ID, name)
+    site_settings = SiteSettings.get_settings()
+
     # ── GET → Plan selection ──
     if request.method == 'GET':
         return render(request, 'payment.html', {
@@ -326,7 +349,7 @@ def payment(request):
         return redirect('payment')
 
     plan_info  = PLANS[plan_key]
-    base_price = plan_info['price']
+    base_price = plan_info['price']   # ✅ DB se aaya price
 
     # Unique paise generate (10-99)
     unique_paise  = random.randint(10, 99)
@@ -349,9 +372,14 @@ def payment(request):
         expires_at    = timezone.now() + timezone.timedelta(minutes=1),
     )
 
-    # QR Code banao (amount auto-fill hoga)
+    # ✅ QR mein DB se UPI ID use karo
     note   = f"SmartTyping-{pay_req.id}-{plan_key}"
-    qr_b64 = make_qr_base64(YOUR_UPI_ID, YOUR_UPI_NAME, unique_amount, note)
+    qr_b64 = make_qr_base64(
+        site_settings.upi_id,
+        site_settings.upi_name,
+        unique_amount,
+        note
+    )
 
     return render(request, 'payment.html', {
         'user':          user,
@@ -363,7 +391,7 @@ def payment(request):
         'qr_b64':        qr_b64,
         'unique_amount': unique_amount,
         'seconds_left':  pay_req.seconds_left(),
-        'upi_id':        YOUR_UPI_ID,
+        'upi_id':        site_settings.upi_id,   # ✅ DB se
     })
 
 
@@ -421,8 +449,12 @@ def payment_approve(request, pay_req_id):
         messages.error(request, "Payment request nahi mili!")
         return redirect('/admin/')
 
-    plan_info = PLANS.get(pay_req.plan, {})
-    days      = plan_info.get('days', 30)
+    # ✅ Plan duration DB se lo (hardcoded nahi)
+    try:
+        plan_obj = SubscriptionPlan.objects.get(plan_key=pay_req.plan)
+        days = plan_obj.duration_days
+    except SubscriptionPlan.DoesNotExist:
+        days = 30  # Fallback — agar plan DB mein nahi mila
 
     profile, _ = UserProfile.objects.get_or_create(user=pay_req.user)
     profile.is_paid     = True
@@ -436,7 +468,8 @@ def payment_approve(request, pay_req_id):
 
     messages.success(
         request,
-        f"✅ {pay_req.user.username} ka {pay_req.plan} plan activate! Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
+        f"✅ {pay_req.user.username} ka {pay_req.plan} plan activate! "
+        f"Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
     )
     return redirect('/admin/app/paymentrequest/')
 
@@ -460,20 +493,26 @@ def forgot_password(request):
         token = str(uuid.uuid4())
         PasswordReset.objects.create(user=user, token=token)
 
-        reset_link = f"{YOUR_DOMAIN}/reset-password/{token}/"
+        domain     = request.build_absolute_uri('/')[:-1]
+        reset_link = f"{domain}/reset-password/{token}/"
+
         print(f"\n{'='*60}\nPASSWORD RESET LINK for {email}:\n{reset_link}\n{'='*60}\n")
 
         try:
             send_mail(
                 subject="Smart Typing Test — Password Reset",
-                message=f"Password reset karne ke liye yeh link click karein:\n\n{reset_link}\n\nYeh link 24 ghante valid hai.",
-                from_email="alokgupta482005@gmail.com",
+                message=(
+                    f"Password reset karne ke liye yeh link click karein:\n\n"
+                    f"{reset_link}\n\n"
+                    "Yeh link 24 ghante valid hai."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
             )
-            messages.success(request, "✅ Reset link email par bheja gaya!")
+            messages.success(request, "✅ Reset link aapke email par bheja gaya!")
         except Exception as e:
             print(f"Email error: {e}")
-            messages.success(request, "✅ Reset link console mein print hua hai!")
+            messages.error(request, f"❌ Email nahi gaya: {e}")
 
         return redirect('login')
 
