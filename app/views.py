@@ -138,7 +138,7 @@ def register(request):
 
         # Domain DB se lo
         site_settings = SiteSettings.get_settings()
-        verify_link = f"{site_settings.site_domain}/verify-email/{token}/"
+        verify_link = f"{settings.SITE_URL}/verify-email/{token}/"
 
         print("\n" + "="*60)
         print(f"EMAIL VERIFICATION LINK for {email}:")
@@ -169,7 +169,6 @@ def register(request):
         return redirect('login')
 
     return render(request, 'register.html')
-
 
 # ═══════════════════════════════════════════════════
 #  EMAIL VERIFY
