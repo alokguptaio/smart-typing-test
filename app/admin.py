@@ -179,14 +179,13 @@ class UserProfileAdmin(admin.ModelAdmin):
     ordering       = ['-paid_date']
 
     def plan_display(self, obj):
-        if obj.is_paid:
-            return format_html(
-                '<span style="background:#00c9a7;color:#fff;padding:3px 10px;'
-                'border-radius:999px;font-weight:700;font-size:11px;">⭐ {}</span>',
-                (obj.plan or 'N/A').upper()
-            )
+     if obj.is_paid and obj.plan:
+        return format_html(
+            '<span style="background:#00c9a7;color:#fff;padding:3px 10px;'
+            'border-radius:999px;font-weight:700;font-size:11px;">⭐ {}</span>',
+            obj.plan.plan_name.upper()
+        )
         return format_html('<span style="color:#9ca3af;">FREE</span>')
-    plan_display.short_description = 'Plan'
 
     def days_left_display(self, obj):
         days = obj.days_left()

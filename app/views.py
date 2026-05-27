@@ -149,7 +149,7 @@ def register(request):
             send_mail(
                 subject="🎉 Welcome to Smart Typing Test!",
                 message=(
-                    f"Hi {username},\n\n"
+                    f"Hi {name},\n\n"
                     "🎉 Congratulations! Your account has been successfully created.\n\n"
                     "👉 Please verify your email by clicking the link below:\n"
                     f"{verify_link}\n\n"
