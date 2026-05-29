@@ -3,9 +3,12 @@
 import os
 import sys
 
-    
+
 def main():
     """Run administrative tasks."""
+    # Current directory ko path mein add karo
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Typing.settings')
     try:
         from django.core.management import execute_from_command_line
