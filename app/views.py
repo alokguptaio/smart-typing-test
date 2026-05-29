@@ -81,7 +81,10 @@ def make_qr_base64(upi_id, name, amount, note):
 
 
 # ═══════════════════════════════════════════════════
-#  REGISTER  ← BUG FIX: `name` → `username`
+#  REGISTER
+#  — Email unique hona chahiye
+#  — Username duplicate allow hai (first_name mein save)
+#  — DB username auto-unique banta hai
 # ═══════════════════════════════════════════════════
 def register(request):
     if get_logged_user(request):
@@ -105,16 +108,22 @@ def register(request):
             messages.error(request, "This email is already registered!")
             return redirect('register')
 
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "This username is already taken!")
-            return redirect('register')
+        # ── Username duplicate allow karo ──
+        # DB mein unique store karo internally
+        # User ka asli naam first_name mein save karo
+        db_username = username
+        counter = 1
+        while User.objects.filter(username=db_username).exists():
+            db_username = f"{username}_{counter}"
+            counter += 1
 
         # ── User DB mein save karo ──
         user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            is_active=True
+            username   = db_username,   # DB mein unique (e.g. Sakshi_1)
+            first_name = username,      # Asli naam yahan (e.g. Sakshi)
+            email      = email,
+            password   = password,
+            is_active  = True
         )
 
         # ── Profile create karo ──
@@ -133,7 +142,7 @@ def register(request):
         print(verify_link)
         print("=" * 60 + "\n")
 
-        # ── Email bhejo ──  ← BUG FIX: `name` → `username`
+        # ── Email bhejo ──
         try:
             send_mail(
                 subject="Welcome to Smart Typing Test!",
@@ -213,7 +222,9 @@ def login(request):
         request.session['user_id'] = user.id
         request.session.set_expiry(86400)
 
-        messages.success(request, f"Welcome back, {user.username}!")
+        # first_name mein asli naam hai — wahi dikhao
+        display_name = user.first_name or user.username
+        messages.success(request, f"Welcome back, {display_name}!")
         return redirect('index')
 
     return render(request, 'login.html')
@@ -244,9 +255,10 @@ def index(request):
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
     return render(request, 'index.html', {
-        'user':    user,
-        'profile': profile,
-        'is_paid': profile.is_active(),
+        'user':         user,
+        'profile':      profile,
+        'is_paid':      profile.is_active(),
+        'display_name': user.first_name or user.username,
     })
 
 
@@ -282,6 +294,7 @@ def dashboard(request):
         'locked_passages':  locked_passages,
         'selected_lang':    selected_lang,
         'active_plans':     active_plans,
+        'display_name':     user.first_name or user.username,
     })
 
 
@@ -430,9 +443,10 @@ def payment_approve(request, pay_req_id):
     pay_req.status = 'approved'
     pay_req.save()
 
+    display_name = pay_req.user.first_name or pay_req.user.username
     messages.success(
         request,
-        f"{pay_req.user.username}'s {pay_req.plan} plan activated! "
+        f"{display_name}'s {pay_req.plan} plan activated! "
         f"Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
     )
     return redirect('/admin/app/paymentrequest/')
@@ -459,11 +473,13 @@ def forgot_password(request):
 
         print(f"\n{'='*60}\nPASSWORD RESET LINK for {email}:\n{reset_link}\n{'='*60}\n")
 
+        display_name = user.first_name or user.username
+
         try:
             send_mail(
                 subject="Smart Typing Test — Password Reset",
                 message=(
-                    f"Hi {user.username},\n\n"
+                    f"Hi {display_name},\n\n"
                     f"Click the link below to reset your password:\n\n"
                     f"{reset_link}\n\n"
                     "This link is valid for 24 hours.\n\n"
