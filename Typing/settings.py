@@ -69,7 +69,7 @@ TEMPLATES = [
 # Local pe purana PostgreSQL use hoga
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:1234@localhost:5432/typingdb',
+        default='sqlite:////home/Alok123/smart-typing-test/db.sqlite3',
         conn_max_age=600
     )
 }
