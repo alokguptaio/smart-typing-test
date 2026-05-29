@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import dj_database_url
 
 # ─── BASE DIR ───────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
 # ─── MIDDLEWARE ──────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',    # ← Railway static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -42,7 +44,7 @@ MIDDLEWARE = [
 ]
 
 # ─── URL & WSGI ──────────────────────────────────────
-ROOT_URLCONF = 'Typing.urls'   # aapka project naam
+ROOT_URLCONF = 'Typing.urls'
 WSGI_APPLICATION = 'Typing.wsgi.application'
 
 # ─── TEMPLATES ───────────────────────────────────────
@@ -62,16 +64,14 @@ TEMPLATES = [
     },
 ]
 
-# ─── DATABASE — PostgreSQL ───────────────────────────
+# ─── DATABASE ────────────────────────────────────────
+# Railway pe DATABASE_URL auto set hota hai
+# Local pe purana PostgreSQL use hoga
 DATABASES = {
-    'default': {
-        'ENGINE':   'django.db.backends.postgresql',
-        'NAME':     'typingdb',
-        'USER':     'postgres',
-        'PASSWORD': '1234',
-        'HOST':     'localhost',
-        'PORT':     '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://postgres:1234@localhost:5432/typingdb',
+        conn_max_age=600
+    )
 }
 
 # ─── PASSWORD VALIDATION ─────────────────────────────
@@ -92,6 +92,7 @@ USE_TZ        = True
 STATIC_URL        = '/static/'
 STATICFILES_DIRS  = [BASE_DIR / 'static']
 STATIC_ROOT       = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ─── MEDIA FILES ─────────────────────────────────────
 MEDIA_URL  = '/media/'
@@ -101,28 +102,24 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ─── SESSION ─────────────────────────────────────────
-SESSION_ENGINE         = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE     = 86400      # 24 ghante
+SESSION_ENGINE             = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE         = 86400
 SESSION_SAVE_EVERY_REQUEST = True
 
 # ═══════════════════════════════════════════════════
 #  EMAIL — Gmail SMTP
-#  Steps:
-#  1. Gmail → Settings → Security
-#  2. 2-Step Verification ON karo
-#  3. App Passwords → Mail → Generate
-#  4. Woh 16 digit password neeche daalo
 # ═══════════════════════════════════════════════════
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp.gmail.com'
 EMAIL_PORT          = 587
 EMAIL_USE_TLS       = True
 EMAIL_HOST_USER     = 'alokgupta482005@gmail.com'
-EMAIL_HOST_PASSWORD = 'hnxz yvnz wqvh fidx'   # ← Gmail App Password 16 digit yahan
+EMAIL_HOST_PASSWORD = 'hnxz yvnz wqvh fidx'
 DEFAULT_FROM_EMAIL  = 'Smart Typing Test <alokgupta482005@gmail.com>'
 
 # ─── SITE URL ────────────────────────────────────────
-SITE_URL = 'http://127.0.0.1:8000'   # Production mein: 'https://aapkadomain.com'
+# Railway deploy hone ke baad apna domain yahan daalo
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 
 # ═══════════════════════════════════════════════════
 #  GOOGLE LOGIN — django-allauth
