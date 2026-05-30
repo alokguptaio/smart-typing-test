@@ -3,11 +3,14 @@ import random
 import qrcode
 import io
 import base64
+import razorpay
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 from .models import (
     EmailVerification,
     PasswordReset,
@@ -20,18 +23,16 @@ from .models import (
 from django.conf import settings
 
 
-# ═══════════════════════════════════════════════════
-#  GOOGLE LOGIN REDIRECT
-# ═══════════════════════════════════════════════════
+def get_razorpay_client():
+    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+
 def google_redirect(request):
     if request.user.is_authenticated:
         request.session['user_id'] = request.user.id
     return redirect('/index/')
 
 
-# ═══════════════════════════════════════════════════
-#  HELPER — Session se current user laao
-# ═══════════════════════════════════════════════════
 def get_logged_user(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -42,9 +43,6 @@ def get_logged_user(request):
         return None
 
 
-# ═══════════════════════════════════════════════════
-#  HELPER — Plans DB se laao
-# ═══════════════════════════════════════════════════
 def get_plans_dict():
     plans = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order')
     return {
@@ -59,16 +57,9 @@ def get_plans_dict():
     }
 
 
-# ═══════════════════════════════════════════════════
-#  HELPER — UPI QR Code banao
-# ═══════════════════════════════════════════════════
 def make_qr_base64(upi_id, name, amount, note):
     upi_url = (
-        f"upi://pay?pa={upi_id}"
-        f"&pn={name}"
-        f"&am={amount}"
-        f"&cu=INR"
-        f"&tn={note}"
+        f"upi://pay?pa={upi_id}&pn={name}&am={amount}&cu=INR&tn={note}"
     )
     qr = qrcode.QRCode(version=1, box_size=8, border=3)
     qr.add_data(upi_url)
@@ -80,12 +71,6 @@ def make_qr_base64(upi_id, name, amount, note):
     return base64.b64encode(buffer.read()).decode('utf-8')
 
 
-# ═══════════════════════════════════════════════════
-#  REGISTER
-#  — Email unique hona chahiye
-#  — Username duplicate allow hai (first_name mein save)
-#  — DB username auto-unique banta hai
-# ═══════════════════════════════════════════════════
 def register(request):
     if get_logged_user(request):
         return redirect('index')
@@ -95,7 +80,6 @@ def register(request):
         email    = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
 
-        # ── Validation ──
         if not username or not email or not password:
             messages.error(request, "All fields are required!")
             return redirect('register')
@@ -108,41 +92,31 @@ def register(request):
             messages.error(request, "This email is already registered!")
             return redirect('register')
 
-        # ── Username duplicate allow karo ──
-        # DB mein unique store karo internally
-        # User ka asli naam first_name mein save karo
         db_username = username
         counter = 1
         while User.objects.filter(username=db_username).exists():
             db_username = f"{username}_{counter}"
             counter += 1
 
-        # ── User DB mein save karo ──
         user = User.objects.create_user(
-            username   = db_username,   # DB mein unique (e.g. Sakshi_1)
-            first_name = username,      # Asli naam yahan (e.g. Sakshi)
+            username   = db_username,
+            first_name = username,
             email      = email,
             password   = password,
             is_active  = True
         )
 
-        # ── Profile create karo ──
         UserProfile.objects.create(user=user, is_paid=False)
 
-        # ── Email verification token ──
         token = str(uuid.uuid4())
         EmailVerification.objects.create(user=user, token=token, is_verified=False)
-
-        # ── Verify link banao ──
         verify_link = f"{settings.SITE_URL}/verify-email/{token}/"
 
-        # Console mein bhi print karo (debug ke liye)
         print("\n" + "=" * 60)
         print(f"EMAIL VERIFICATION LINK for {email}:")
         print(verify_link)
         print("=" * 60 + "\n")
 
-        # ── Email bhejo ──
         try:
             send_mail(
                 subject="Welcome to Smart Typing Test!",
@@ -160,26 +134,16 @@ def register(request):
                 recipient_list=[email],
                 fail_silently=False,
             )
-            messages.success(
-                request,
-                "Account created! Please check your email to verify your account."
-            )
+            messages.success(request, "Account created! Please check your email to verify your account.")
         except Exception as e:
             print(f"Email send error: {e}")
-            messages.warning(
-                request,
-                f"Account created, but verification email could not be sent. "
-                f"Error: {e}"
-            )
+            messages.warning(request, f"Account created, but verification email could not be sent. Error: {e}")
 
         return redirect('login')
 
     return render(request, 'register.html')
 
 
-# ═══════════════════════════════════════════════════
-#  EMAIL VERIFY
-# ═══════════════════════════════════════════════════
 def verify_email(request, token):
     try:
         ev = EmailVerification.objects.get(token=token)
@@ -193,14 +157,10 @@ def verify_email(request, token):
 
     ev.is_verified = True
     ev.save()
-
     messages.success(request, "Email verified! Please login now.")
     return redirect('login')
 
 
-# ═══════════════════════════════════════════════════
-#  LOGIN
-# ═══════════════════════════════════════════════════
 def login(request):
     if get_logged_user(request):
         return redirect('index')
@@ -222,7 +182,6 @@ def login(request):
         request.session['user_id'] = user.id
         request.session.set_expiry(86400)
 
-        # first_name mein asli naam hai — wahi dikhao
         display_name = user.first_name or user.username
         messages.success(request, f"Welcome back, {display_name}!")
         return redirect('index')
@@ -230,18 +189,12 @@ def login(request):
     return render(request, 'login.html')
 
 
-# ═══════════════════════════════════════════════════
-#  LOGOUT
-# ═══════════════════════════════════════════════════
 def logout_view(request):
     request.session.flush()
     messages.success(request, "Logged out successfully!")
     return redirect('login')
 
 
-# ═══════════════════════════════════════════════════
-#  INDEX
-# ═══════════════════════════════════════════════════
 def index(request):
     if request.user.is_authenticated:
         user = request.user
@@ -262,9 +215,6 @@ def index(request):
     })
 
 
-# ═══════════════════════════════════════════════════
-#  DASHBOARD
-# ═══════════════════════════════════════════════════
 def dashboard(request):
     user = get_logged_user(request)
     if not user:
@@ -298,9 +248,6 @@ def dashboard(request):
     })
 
 
-# ═══════════════════════════════════════════════════
-#  PAYMENT
-# ═══════════════════════════════════════════════════
 def payment(request):
     user = get_logged_user(request)
     if not user:
@@ -311,19 +258,18 @@ def payment(request):
     if profile.is_active():
         messages.success(
             request,
-            f"Your {profile.plan} plan is already active! "
-            f"{profile.days_left()} days remaining."
+            f"Your {profile.plan} plan is already active! {profile.days_left()} days remaining."
         )
         return redirect('dashboard')
 
-    PLANS         = get_plans_dict()
-    site_settings = SiteSettings.get_settings()
+    PLANS = get_plans_dict()
 
     if request.method == 'GET':
         return render(request, 'payment.html', {
-            'user':  user,
-            'plans': PLANS,
-            'step':  'select',
+            'user':            user,
+            'plans':           PLANS,
+            'step':            'select',
+            'razorpay_key_id': settings.RAZORPAY_KEY_ID,
         })
 
     plan_key = request.POST.get('plan', '').strip()
@@ -332,91 +278,124 @@ def payment(request):
         messages.error(request, "Invalid plan! Please try again.")
         return redirect('payment')
 
-    plan_info     = PLANS[plan_key]
-    base_price    = plan_info['price']
-    unique_paise  = random.randint(10, 99)
-    unique_amount = float(f"{base_price}.{unique_paise}")
+    plan_info    = PLANS[plan_key]
+    amount_inr   = plan_info['price']
+    amount_paise = amount_inr * 100
 
-    PaymentRequest.objects.filter(
-        user=user,
-        status='pending',
-        expires_at__lt=timezone.now()
-    ).update(status='expired')
+    client = get_razorpay_client()
+    razorpay_order = client.order.create({
+        'amount':          amount_paise,
+        'currency':        'INR',
+        'payment_capture': 1,
+        'notes': {
+            'plan_key':   plan_key,
+            'user_id':    str(user.id),
+            'user_email': user.email,
+        }
+    })
 
     pay_req = PaymentRequest.objects.create(
-        user          = user,
-        plan          = plan_key,
-        base_amount   = base_price,
-        unique_paise  = unique_paise,
-        unique_amount = unique_amount,
-        expires_at    = timezone.now() + timezone.timedelta(minutes=1),
-    )
-
-    note   = f"SmartTyping-{pay_req.id}-{plan_key}"
-    qr_b64 = make_qr_base64(
-        site_settings.upi_id,
-        site_settings.upi_name,
-        unique_amount,
-        note
+        user            = user,
+        plan            = plan_key,
+        base_amount     = amount_inr,
+        unique_paise    = 0,
+        unique_amount   = amount_inr,
+        transaction_ref = razorpay_order['id'],
+        expires_at      = timezone.now() + timezone.timedelta(hours=1),
     )
 
     return render(request, 'payment.html', {
-        'user':          user,
-        'plans':         PLANS,
-        'step':          'qr',
-        'plan_key':      plan_key,
-        'plan_info':     plan_info,
-        'pay_req':       pay_req,
-        'qr_b64':        qr_b64,
-        'unique_amount': unique_amount,
-        'seconds_left':  pay_req.seconds_left(),
-        'upi_id':        site_settings.upi_id,
+        'user':              user,
+        'plans':             PLANS,
+        'step':              'razorpay',
+        'plan_key':          plan_key,
+        'plan_info':         plan_info,
+        'pay_req':           pay_req,
+        'amount_paise':      amount_paise,
+        'amount_inr':        amount_inr,
+        'razorpay_order_id': razorpay_order['id'],
+        'razorpay_key_id':   settings.RAZORPAY_KEY_ID,
+        'user_email':        user.email,
+        'user_name':         user.first_name or user.username,
     })
 
 
-# ═══════════════════════════════════════════════════
-#  PAYMENT CONFIRM
-# ═══════════════════════════════════════════════════
-def payment_confirm(request):
+def razorpay_verify(request):
+    if request.method != 'POST':
+        return redirect('payment')
+
     user = get_logged_user(request)
     if not user:
         return redirect('login')
 
-    if request.method != 'POST':
-        return redirect('payment')
+    razorpay_payment_id = request.POST.get('razorpay_payment_id', '')
+    razorpay_order_id   = request.POST.get('razorpay_order_id', '')
+    razorpay_signature  = request.POST.get('razorpay_signature', '')
+    pay_req_id          = request.POST.get('pay_req_id', '')
 
-    pay_req_id = request.POST.get('pay_req_id', '').strip()
-    txn_ref    = request.POST.get('transaction_ref', '').strip()
+    client = get_razorpay_client()
+    try:
+        client.utility.verify_payment_signature({
+            'razorpay_order_id':   razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature':  razorpay_signature,
+        })
+    except razorpay.errors.SignatureVerificationError:
+        messages.error(request, "Payment verification failed! Please contact support.")
+        return redirect('payment')
 
     try:
-        pay_req = PaymentRequest.objects.get(id=pay_req_id, user=user, status='pending')
+        pay_req = PaymentRequest.objects.get(id=pay_req_id, user=user)
     except PaymentRequest.DoesNotExist:
-        messages.error(request, "Payment request not found or expired!")
+        messages.error(request, "Payment request not found!")
         return redirect('payment')
 
-    if pay_req.is_expired():
-        pay_req.status = 'expired'
-        pay_req.save()
-        messages.error(request, "QR code expired! Please try again.")
-        return redirect('payment')
+    try:
+        plan_obj = SubscriptionPlan.objects.get(plan_key=pay_req.plan)
+        days     = plan_obj.duration_days
+    except SubscriptionPlan.DoesNotExist:
+        days = 30
 
-    pay_req.transaction_ref = txn_ref
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile.is_paid     = True
+    profile.plan        = pay_req.plan
+    profile.paid_date   = timezone.now()
+    profile.expiry_date = timezone.now() + timezone.timedelta(days=days)
+    profile.save()
+
+    pay_req.status          = 'approved'
+    pay_req.transaction_ref = razorpay_payment_id
     pay_req.save()
+
+    display_name = user.first_name or user.username
+    try:
+        send_mail(
+            subject="Smart Typing Test — Payment Successful! 🎉",
+            message=(
+                f"Hi {display_name},\n\n"
+                f"Your payment was successful!\n\n"
+                f"Plan: {plan_obj.plan_name}\n"
+                f"Amount: ₹{pay_req.unique_amount}\n"
+                f"Expiry: {profile.expiry_date.strftime('%d %b %Y')}\n\n"
+                f"All passages are now unlocked. Happy typing!\n\n"
+                f"Team Smart Typing Test"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
 
     messages.success(
         request,
-        f"Payment submitted! Admin will verify and activate within 24 hours. "
-        f"Request ID: #{pay_req.id}"
+        f"🎉 Payment successful! {plan_obj.plan_name} activated. Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
     )
     return redirect('dashboard')
 
 
-# ═══════════════════════════════════════════════════
-#  PAYMENT APPROVE — Admin only
-# ═══════════════════════════════════════════════════
 def payment_approve(request, pay_req_id):
     user = get_logged_user(request)
-
     if not user or not user.is_staff:
         messages.error(request, "Access denied!")
         return redirect('login')
@@ -446,15 +425,11 @@ def payment_approve(request, pay_req_id):
     display_name = pay_req.user.first_name or pay_req.user.username
     messages.success(
         request,
-        f"{display_name}'s {pay_req.plan} plan activated! "
-        f"Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
+        f"{display_name}'s {pay_req.plan} plan activated! Expiry: {profile.expiry_date.strftime('%d %b %Y')}"
     )
     return redirect('/admin/app/paymentrequest/')
 
 
-# ═══════════════════════════════════════════════════
-#  FORGOT PASSWORD
-# ═══════════════════════════════════════════════════
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip().lower()
@@ -465,13 +440,9 @@ def forgot_password(request):
             return redirect('forgot_password')
 
         PasswordReset.objects.filter(user=user).delete()
-
         token = str(uuid.uuid4())
         PasswordReset.objects.create(user=user, token=token)
-
         reset_link = f"{settings.SITE_URL}/reset-password/{token}/"
-
-        print(f"\n{'='*60}\nPASSWORD RESET LINK for {email}:\n{reset_link}\n{'='*60}\n")
 
         display_name = user.first_name or user.username
 
@@ -492,7 +463,6 @@ def forgot_password(request):
             )
             messages.success(request, "Reset link sent to your email!")
         except Exception as e:
-            print(f"Email error: {e}")
             messages.error(request, f"Email could not be sent. Error: {e}")
 
         return redirect('login')
@@ -500,9 +470,6 @@ def forgot_password(request):
     return render(request, 'forgot_password.html')
 
 
-# ═══════════════════════════════════════════════════
-#  RESET PASSWORD
-# ═══════════════════════════════════════════════════
 def reset_password(request, token):
     reset_obj = PasswordReset.objects.filter(token=token).first()
 

@@ -24,4 +24,8 @@ urlpatterns = [
 
     # ── GOOGLE LOGIN ──
     path('accounts/', include('allauth.urls')),
+
+     # ... tumhare existing URLs ...
+    path('razorpay/verify/', views.razorpay_verify, name='razorpay_verify'),
 ]
+
