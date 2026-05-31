@@ -82,7 +82,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 <div class="card">
   <div class="card-top">
     <h1>⭐ Premium Upgrade</h1>
-    <p>Plan chunein → Pay karein → Saare passages turant unlock!</p>
+    <p>Choose your plan, pay securely, and unlock all passages instantly.</p>
   </div>
 
   <div class="card-body">
@@ -95,7 +95,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
     {% if step == 'select' %}
     <!-- ══ STEP 1 — PLAN SELECT ══ -->
-    <div class="step-lbl">📋 Step 1 — Apna Plan Chunein</div>
+    <div class="step-lbl">📋 Step 1 — Select Your Plan</div>
 
     <form method="POST" action="{% url 'payment' %}" id="planForm">
       {% csrf_token %}
@@ -113,7 +113,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
         {% endfor %}
       </div>
       <button type="submit" class="gen-btn" id="genBtn" disabled>
-        ⭐ UPGRADE KARO — PAY KAREIN →
+        ⭐ Unlock Premium — Pay Now →
       </button>
     </form>
 
@@ -133,11 +133,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
     </div>
 
     <div class="features-list">
-      <div class="feature-item"><span>✅</span><span>Saare passages turant unlock honge</span></div>
-      <div class="feature-item"><span>✅</span><span>Hindi aur English dono available</span></div>
-      <div class="feature-item"><span>✅</span><span>{{ plan_info.days }} din ka full access</span></div>
+      <div class="feature-item"><span>✅</span><span>All passages will be unlocked instantly</span></div>
+      <div class="feature-item"><span>✅</span><span>Hindi & English Available</span></div>
+      <div class="feature-item"><span>✅</span><span>{{ plan_info.days }} Day Full Access</span></div>
       <div class="feature-item"><span>✅</span><span>Secure payment — Razorpay powered</span></div>
-      <div class="feature-item"><span>✅</span><span>Payment ke turant baad activate</span></div>
+      <div class="feature-item"><span>✅</span><span>Automatically activated after payment</span></div>
     </div>
 
     <!-- Razorpay Payment Form -->
@@ -150,7 +150,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
     </form>
 
     <button class="pay-btn" onclick="openRazorpay()">
-      💳 ₹{{ amount_inr }} — ABHI PAY KAREIN
+      💳 ₹{{ amount_inr }} — Pay Now →
     </button>
 
     <div class="secure-note">
@@ -163,9 +163,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
 <div class="back-row">
   {% if step == 'razorpay' %}
-    <a href="{% url 'payment' %}">← Alag plan chunein</a>
+    <a href="{% url 'payment' %}">← Switch Plan</a>
   {% else %}
-    <a href="{% url 'dashboard' %}">← Dashboard par wapas jao</a>
+    <a href="{% url 'dashboard' %}">← Back to Dashboard</a>
   {% endif %}
 </div>
 </div>

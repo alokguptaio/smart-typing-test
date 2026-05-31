@@ -119,7 +119,7 @@ DEFAULT_FROM_EMAIL  = 'Smart Typing Test <alokgupta482005@gmail.com>'
 
 # ─── SITE URL ────────────────────────────────────────
 # Railway deploy hone ke baad apna domain yahan daalo
-SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+SITE_URL = 'https://alok123.pythonanywhere.com'
 
 # ═══════════════════════════════════════════════════
 #  GOOGLE LOGIN — django-allauth
