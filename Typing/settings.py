@@ -7,8 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── SECURITY ───────────────────────────────────────
 SECRET_KEY = 'django-insecure-aapki-secret-key-yahan-rakho'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG = False
+ALLOWED_HOSTS = ['alok123.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 # ─── INSTALLED APPS ─────────────────────────────────
 INSTALLED_APPS = [
