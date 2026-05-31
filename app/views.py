@@ -503,3 +503,47 @@ def reset_password(request, token):
         return redirect('login')
 
     return render(request, 'reset_password.html', {'token': token})
+def profile(request):
+    user = get_logged_user(request)
+    if not user:
+        return redirect('login')
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    return render(request, 'profile.html', {
+        'user':         user,
+        'profile':      profile,
+        'is_paid':      profile.is_active(),
+        'days_left':    profile.days_left(),
+        'display_name': user.first_name or user.username,
+    })
+
+def change_password(request):
+    user = get_logged_user(request)
+    if not user:
+        return redirect('login')
+    if request.method == 'POST':
+        current = request.POST.get('current_password', '')
+        new_pw  = request.POST.get('new_password', '')
+        confirm = request.POST.get('confirm_password', '')
+        if not user.check_password(current):
+            messages.error(request, "Current password galat hai!")
+            return redirect('profile')
+        if len(new_pw) < 6:
+            messages.error(request, "Password kam se kam 6 characters ka hona chahiye!")
+            return redirect('profile')
+        if new_pw != confirm:
+            messages.error(request, "Passwords match nahi karte!")
+            return redirect('profile')
+        user.set_password(new_pw)
+        user.save()
+        request.session['user_id'] = user.id
+        messages.success(request, "Password successfully update ho gaya!")
+        return redirect('profile')
+    return redirect('profile')
+def help_center(request):
+    user = get_logged_user(request)
+    if not user:
+        return redirect('login')
+    return render(request, 'help.html', {
+        'user': user,
+        'display_name': user.first_name or user.username,
+    })

@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help Center — Smart Typing Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="{% static 'images/logo.png' %}">
+<style>
+[data-theme="light"]{--bg:#f4f6ff;--surf:#ffffff;--surf2:#eef0fb;--surf3:#e4e6f5;--brd:#d0d4f0;--brd2:#b8bce0;--txt:#0f1235;--dim:#4a4e8a;--muted:#8890c0;--shad:rgba(0,0,60,.09);--dot:rgba(0,0,80,.03);--topbg:rgba(255,255,255,.96);}
+[data-theme="dark"]{--bg:#05050e;--surf:#0b0b1c;--surf2:#101028;--surf3:#171732;--brd:#1a1a38;--brd2:#252550;--txt:#e2e2f5;--dim:#8080b0;--muted:#40405a;--shad:rgba(0,0,0,.65);--dot:rgba(255,255,255,.028);--topbg:rgba(11,11,28,.96);}
+:root{--a:#00c9a7;--a2:#6d28d9;--ag:rgba(0,201,167,.13);--err:#dc2626;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--txt);font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(circle,var(--dot) 1px,transparent 1px);background-size:28px 28px;}
+.gtext{background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+@keyframes fade-up{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--topbg);border-bottom:1px solid var(--brd2);backdrop-filter:blur(16px);}
+.tb-left{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.tb-left img{height:36px;border-radius:50%;border:2px solid var(--a);}
+.tb-name strong{display:block;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:800;color:var(--a);}
+.tb-name small{display:block;font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;}
+.tb-right{display:flex;align-items:center;gap:9px;}
+.th-btn{display:flex;align-items:center;gap:7px;background:var(--surf2);border:1.5px solid var(--brd2);border-radius:999px;padding:5px 13px 5px 9px;cursor:pointer;font-size:12px;font-weight:700;color:var(--dim);transition:all .25s;font-family:'Rajdhani',sans-serif;}
+.th-btn:hover{border-color:var(--a);color:var(--a);}
+.pill{width:34px;height:17px;border-radius:999px;background:var(--brd2);position:relative;transition:background .3s;flex-shrink:0;}
+.pill.on{background:var(--a);}
+.pill::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .3s;}
+.pill.on::after{transform:translateX(17px);}
+.back-link{background:transparent;border:1.5px solid var(--brd2);color:var(--dim);border-radius:8px;padding:5px 13px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s;}
+.back-link:hover{border-color:var(--a);color:var(--a);}
+
+/* MAIN */
+.main{padding:76px 24px 60px;max-width:800px;margin:0 auto;position:relative;z-index:1;}
+
+/* HERO */
+.help-hero{text-align:center;margin-bottom:36px;animation:fade-up .4s ease both;}
+.help-hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(20px,4vw,32px);font-weight:900;margin-bottom:10px;}
+.help-hero p{font-size:14px;color:var(--dim);max-width:480px;margin:0 auto;line-height:1.7;}
+
+/* CONTACT CARDS */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:36px;animation:fade-up .4s .1s ease both;}
+.contact-card{background:var(--surf);border:1.5px solid var(--brd2);border-radius:18px;padding:24px 20px;text-align:center;text-decoration:none;color:var(--txt);transition:all .3s cubic-bezier(.25,.8,.25,1);position:relative;overflow:hidden;}
+.contact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .3s;}
+.contact-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px var(--shad);}
+.contact-card:hover::before{opacity:1;}
+.contact-card.call{border-color:rgba(0,201,167,.3);}
+.contact-card.call::before{background:linear-gradient(90deg,#00c9a7,#00e5bf);}
+.contact-card.call:hover{border-color:#00c9a7;}
+.contact-card.whatsapp{border-color:rgba(37,211,102,.3);}
+.contact-card.whatsapp::before{background:linear-gradient(90deg,#25d366,#128c7e);}
+.contact-card.whatsapp:hover{border-color:#25d366;}
+.contact-card.email{border-color:rgba(109,40,217,.3);}
+.contact-card.email::before{background:linear-gradient(90deg,#6d28d9,#a855f7);}
+.contact-card.email:hover{border-color:#6d28d9;}
+.cc-icon{font-size:40px;margin-bottom:14px;display:block;}
+.cc-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:800;margin-bottom:6px;}
+.cc-desc{font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:12px;}
+.cc-value{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--a);}
+.contact-card.whatsapp .cc-value{color:#25d366;}
+.contact-card.email .cc-value{color:#6d28d9;}
+[data-theme="dark"] .contact-card.email .cc-value{color:#a78bfa;}
+
+/* FAQ */
+.faq-section{animation:fade-up .4s .2s ease both;}
+.faq-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.faq-list{display:flex;flex-direction:column;gap:10px;}
+.faq-item{background:var(--surf);border:1.5px solid var(--brd2);border-radius:14px;overflow:hidden;transition:border-color .25s;}
+.faq-item:hover{border-color:var(--a);}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--txt);user-select:none;gap:10px;}
+.faq-q span:first-child{flex:1;}
+.faq-arrow{font-size:12px;color:var(--muted);transition:transform .3s;flex-shrink:0;}
+.faq-item.open .faq-arrow{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s;}
+.faq-item.open .faq-a{max-height:300px;}
+.faq-a-inner{padding:0 20px 16px;font-size:13px;color:var(--dim);line-height:1.8;border-top:1px solid var(--brd2);}
+.faq-a-inner a{color:var(--a);font-weight:600;text-decoration:none;}
+.faq-a-inner a:hover{text-decoration:underline;}
+
+/* TIMING BANNER */
+.timing-banner{background:linear-gradient(135deg,rgba(0,201,167,.08),rgba(109,40,217,.06));border:1.5px solid rgba(0,201,167,.25);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;animation:fade-up .4s .15s ease both;}
+.tb-icon{font-size:28px;flex-shrink:0;}
+.tb-text p{font-size:12px;color:var(--dim);line-height:1.7;}
+.tb-text b{color:var(--txt);font-family:'Rajdhani',sans-serif;font-size:14px;}
+
+@media(max-width:640px){
+  #topbar{padding:0 14px;}
+  .main{padding:72px 16px 50px;}
+  .contact-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <a href="{% url 'index' %}" class="tb-left">
+    <img src="{% static 'images/logo.png' %}" alt="Logo">
+    <div class="tb-name">
+      <strong>SMART TYPING TEST</strong>
+      <small>RAEBARELI — TYPING PLATFORM</small>
+    </div>
+  </a>
+  <div class="tb-right">
+    <a href="{% url 'dashboard' %}" class="back-link">← Dashboard</a>
+    <div class="th-btn" onclick="toggleTheme()">
+      <span id="thico">🌙</span><span id="thlbl">Dark</span>
+      <div class="pill" id="tpill"></div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- HERO -->
+  <div class="help-hero">
+    <h1>🎧 <span class="gtext">Help Center</span></h1>
+    <p>Any problem – we're here! Call, WhatsApp, or email.</p>
+  </div>
+
+  <!-- TIMING BANNER -->
+  <div class="timing-banner">
+    <span class="tb-icon">⏰</span>
+    <div class="tb-text">
+      <b>Support Timing</b>
+      <p>Monday – Saturday: <b>9:00 AM – 6:00 PM</b><br>Sunday: <b>10:00 AM – 2:00 PM</b></p>
+    </div>
+  </div>
+
+  <!-- CONTACT CARDS -->
+  <div class="contact-grid">
+
+    <!-- CALL -->
+    <a href="tel:9580717811" class="contact-card call">
+      <span class="cc-icon">📞</span>
+      <div class="cc-title">Call Support</div>
+      <div class="cc-desc">Speak directly to our support team</div>
+      <div class="cc-value">9580717811</div>
+    </a>
+
+    <!-- WHATSAPP -->
+    <a href="https://wa.me/919580717811?text=Hello%2C%20I%20need%20help%20with%20Smart%20Typing%20Test" target="_blank" class="contact-card whatsapp">
+      <span class="cc-icon">💬</span>
+      <div class="cc-title">WhatsApp</div>
+      <div class="cc-desc">Message us on WhatsApp – you will receive a reply soon.</div>
+      <div class="cc-value">Chat Now →</div>
+    </a>
+
+    <!-- EMAIL -->
+    <a href="mailto:alokgupta482005@gmail.com?subject=Help%20Required%20-%20Smart%20Typing%20Test" class="contact-card email">
+      <span class="cc-icon">📧</span>
+      <div class="cc-title">Email Support</div>
+      <div class="cc-desc">Email us – you will receive a reply within 24 hours</div>
+      <div class="cc-value">alokgupta482005@gmail.com</div>
+    </a>
+
+  </div>
+
+  <!-- FAQ SECTION -->
+  <div class="faq-section">
+    <div class="faq-title">❓ Frequently asked questions</div>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Why is the passage not unlocked after making the payment?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">It unlocks <b>automatically</b> right after payment with RazorPay. If it doesn't, refresh the page or log out and log back in. If the problem persists, WhatsApp or call us.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>What is the expiry date of my plan?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">You can check your plan expiry date on <a href="{% url 'profile' %}">Profile Page</a>. "Days left" is also displayed on the Dashboard.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Forgot Password – What to Do?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">Click <b>"Forgot Password?"</b> on the login page. Enter your registered email address – a reset link will be sent. The link will be valid for 24 hours.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>How is WPM calculated in typing test?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <b>Net WPM</b> = (Correct Words + Half Mistakes×0.5) ÷ Time (minutes)<br><br>
+            <b>Qualify ke liye:</b> English — 30 WPM, Hindi — 25 WPM minimum chahiye.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Full Mistake aur Half Mistake mein kya fark hai?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            <b>Full Mistake:</b> Word bilkul galat — 1 mistake count hoti hai.<br>
+            <b>Half Mistake:</b> Word thoda galat (1-2 character difference) — 0.5 mistake count hoti hai.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>What is the refund policy?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">Refunds due to technical issues will be received within 24 hours of payment. For refunds, please WhatsApp or email with the payment ID.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Which font is used for Hindi typing?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">Hamare platform pe <b>Mangal / Noto Sans Devanagari</b> font use hota hai — jo government exams mein use hota hai. Practice ke liye yahi standard hai.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Can I take typing test on mobile?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">Mobile pe site kholna possible hai lekin <b>typing test ke liye keyboard wala device best hai</b> — laptop ya desktop recommended hai exam preparation ke liye.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* THEME */
+let isDark = localStorage.getItem('theme') === 'dark';
+if(isDark){
+  document.documentElement.setAttribute('data-theme','dark');
+  document.getElementById('thico').textContent = '☀️';
+  document.getElementById('thlbl').textContent = 'Light';
+  document.getElementById('tpill').classList.add('on');
+}
+function toggleTheme(){
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('thico').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('thlbl').textContent  = isDark ? 'Light' : 'Dark';
+  document.getElementById('tpill').classList.toggle('on', isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+/* FAQ TOGGLE */
+function toggleFaq(el){
+  const item = el.parentElement;
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if(!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>

@@ -147,3 +147,26 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 # ── RAZORPAY ──
 RAZORPAY_KEY_ID     = 'rzp_live_SvbFLLFCmhFiU1'
 RAZORPAY_KEY_SECRET = 'CvPC55jo8O04g4o1lOEHwC0g'
+
+
+# Local pe PostgreSQL, Production pe SQLite
+if os.environ.get('PYTHONANYWHERE') or not os.path.exists('C:/'):
+    # PythonAnywhere
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='sqlite:////home/Alok123/smart-typing-test/db.sqlite3',
+            conn_max_age=600
+        )
+    }
+else:
+    # Local Windows
+    DATABASES = {
+        'default': {
+            'ENGINE':   'django.db.backends.postgresql',
+            'NAME':     'typingdb',
+            'USER':     'postgres',
+            'PASSWORD': '1234',
+            'HOST':     'localhost',
+            'PORT':     '5432',
+        }
+    }

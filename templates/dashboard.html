@@ -308,7 +308,10 @@
     </div>
   </a>
   <div class="tb-right">
-    <span class="tb-user">👤 {{ user.username }}</span>
+    <a href="{% url 'profile' %}" class="tb-user" style="text-decoration:none;display:flex;align-items:center;gap:6px;background:var(--surf2);border:1.5px solid var(--brd2);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--dim);transition:all .25s;font-family:'Rajdhani',sans-serif;" onmouseover="this.style.borderColor='var(--a)';this.style.color='var(--a)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--dim)'">
+  👤 {{ display_name }}
+</a>
+<a href="{% url 'help_center' %}" class="back-link" style="border-color:rgba(0,201,167,.3);color:var(--a);">🎧 Help</a>
     {% if is_paid %}
       <span class="badge-paid">⭐ PREMIUM</span>
       {% if days_left > 0 %}<span class="days-tag">{{ days_left }} din baaki</span>{% endif %}
@@ -333,20 +336,20 @@
   </div>
   {% endif %}
   <div class="dash-head">
-    <h1>Passage <span class="gtext">Select Karein</span></h1>
-    <p>Language chunein aur passage click karke typing test shuru karein</p>
+    <h1>Passage <span class="gtext">Select </span></h1>
+    <p>Select the language and click on the passage to start the typing test</p>
   </div>
   {% if not is_paid %}
   <div class="upgrade-banner">
     <div class="upgrade-banner-left">
-      <p><b>🔒 Free Plan:</b> Abhi sirf free passages available hain.<br>Premium lo aur <b>saare passages unlock</b> karo!</p>
+      <p><b>🔒 Free Plan:</b> Now only free passages are available.<br>Take Premium and <b>unlock all passages</b> with it!</p>
       <div class="upgrade-banner-plans">
   {% for plan in active_plans %}
   <div class="mini-plan">{{ plan.plan_name }} <span>₹{{ plan.price }}</span></div>
   {% endfor %}
 </div>
     </div>
-    <a href="{% url 'payment' %}" class="upgrade-btn">⭐ UPGRADE KAREIN</a>
+    <a href="{% url 'payment' %}" class="upgrade-btn">⭐ UPGRADE </a>
   </div>
   {% endif %}
   {% if is_paid %}
@@ -354,7 +357,7 @@
     <span class="pb-icon">🎉</span>
     <div class="pb-text">
       <b>Premium Plan Active — {{ profile.plan|upper }}</b>
-      <p>Saare passages unlock hain. {{ days_left }} din baaki hain aapke plan mein.</p>
+      <p>All passages are unlocked. {{ days_left }} days are left in your plan.</p>
     </div>
   </div>
   {% endif %}
@@ -382,7 +385,7 @@
   </div>
   {% endif %}
   {% if locked_passages %}
-  <div class="sec-title">🔒 Locked Passages ({{ locked_passages|length }}) — Upgrade karo unlock karne ke liye</div>
+  <div class="sec-title">🔒 Locked Passages ({{ locked_passages|length }}) —Upgrade to unlock</div>
   <div class="pgrid">
     {% for p in locked_passages %}
     <div class="pcard-locked">
@@ -392,13 +395,13 @@
           <span class="diff {{ p.difficulty }}">{{ p.get_difficulty_display }}</span>
         </div>
         <div class="ptitle" style="color:var(--muted);">{{ p.title }}</div>
-        <div class="pprev">Yeh premium passage hai...</div>
+        <div class="pprev">premium passage ...</div>
         <div class="pmeta"><span>— words</span></div>
       </div>
       <div class="lock-overlay">
         <span class="lock-icon">🔒</span>
         <span class="lock-label">Premium Passage</span>
-        <a href="{% url 'payment' %}" class="unlock-btn">Unlock Karein</a>
+        <a href="{% url 'payment' %}" class="unlock-btn">Unlock </a>
       </div>
     </div>
     {% endfor %}
